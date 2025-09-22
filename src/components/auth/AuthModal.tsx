@@ -114,17 +114,21 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     const email = formData.get("email") as string;
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email }
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Password reset email sent!",
-        description: "Check your email for instructions to reset your password.",
-      });
-      setShowForgotPassword(false);
+      if (data?.success) {
+        toast({
+          title: "Password reset email sent!",
+          description: "Check your email for instructions to reset your password.",
+        });
+        setShowForgotPassword(false);
+      } else {
+        throw new Error(data?.error || "Failed to send reset email");
+      }
     } catch (error) {
       toast({
         title: "Error",
