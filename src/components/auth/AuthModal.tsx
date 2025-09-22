@@ -15,6 +15,7 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { toast } = useToast();
 
   const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -105,23 +106,88 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     }
   };
 
+  const handleForgotPassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password reset email sent!",
+        description: "Check your email for instructions to reset your password.",
+      });
+      setShowForgotPassword(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send reset email",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Welcome to Flexifit
+            {showForgotPassword ? "Reset Password" : "Welcome to Flexifit"}
           </DialogTitle>
           <DialogDescription>
-            Join thousands of fitness enthusiasts finding the perfect gym sessions.
+            {showForgotPassword 
+              ? "Enter your email to receive password reset instructions."
+              : "Join thousands of fitness enthusiasts finding the perfect gym sessions."
+            }
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
+        {showForgotPassword ? (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="forgot-email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send Reset Email
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowForgotPassword(false)}
+                className="flex-1"
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
 
           <TabsContent value="signin" className="space-y-4">
             <form onSubmit={handleSignIn} className="space-y-4">
@@ -157,6 +223,15 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
             </form>
           </TabsContent>
 
@@ -236,6 +311,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </form>
           </TabsContent>
         </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );

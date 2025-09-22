@@ -2,9 +2,22 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, Calendar, Filter } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function HeroSection() {
   const [searchLocation, setSearchLocation] = useState("");
+  const [searchDate, setSearchDate] = useState("");
+  const [priceFilter, setPriceFilter] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    const searchParams = new URLSearchParams();
+    if (searchLocation) searchParams.set("location", searchLocation);
+    if (searchDate) searchParams.set("date", searchDate);
+    if (priceFilter) searchParams.set("price", priceFilter);
+    
+    navigate(`/search?${searchParams.toString()}`);
+  };
 
   return (
     <section className="relative bg-gradient-hero min-h-[600px] flex items-center">
@@ -37,6 +50,8 @@ export function HeroSection() {
               <Calendar className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
               <Input
                 type="date"
+                value={searchDate}
+                onChange={(e) => setSearchDate(e.target.value)}
                 className="pl-10 h-12 text-foreground"
                 min={new Date().toISOString().split('T')[0]}
               />
@@ -44,7 +59,11 @@ export function HeroSection() {
             
             <div className="relative">
               <Filter className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-              <select className="w-full h-12 pl-10 pr-4 border border-input bg-background rounded-md text-foreground">
+              <select 
+                value={priceFilter}
+                onChange={(e) => setPriceFilter(e.target.value)}
+                className="w-full h-12 pl-10 pr-4 border border-input bg-background rounded-md text-foreground"
+              >
                 <option value="">Any Price</option>
                 <option value="0-300">Under ₹300</option>
                 <option value="300-500">₹300 - ₹500</option>
@@ -53,7 +72,7 @@ export function HeroSection() {
               </select>
             </div>
             
-            <Button size="lg" className="h-12">
+            <Button size="lg" className="h-12" onClick={handleSearch}>
               <Search className="h-5 w-5 mr-2" />
               Find Gyms
             </Button>
