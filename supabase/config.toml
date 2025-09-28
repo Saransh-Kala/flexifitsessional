@@ -1,4 +1,4 @@
-project_id = "ugjurqacjxgrsbuclinu"
+project_id = "sauzeooewjlavjyckmyg"
 
 [functions.send-password-reset]
 verify_jwt = false
